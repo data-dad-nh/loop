@@ -4,7 +4,7 @@
 // gracefully to "do nothing, let the user type it themselves" if no key
 // is configured — the app never depends on this to be usable.
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const MODEL = 'gemini-3.8-flash'
+const MODEL = 'gemini-flash-lite-latest'
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`
 
 export const geminiEnabled = Boolean(API_KEY)
