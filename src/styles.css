@@ -645,3 +645,126 @@ button, input, textarea, select {
   margin: 0 0 6px;
   padding-left: 18px;
 }
+
+/* ---------- editing ---------- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 40, 43, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 20;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90%;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sheet__title {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+}
+
+.sheet__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.field textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.task-row__body--button {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.task-row__title { display: block; }
+
+.task-row__notes,
+.right-now__notes {
+  display: block;
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.comm-form--inline {
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+.edit-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-items li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-items input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+}
+
+.comm-row__edit {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  padding: 2px 4px;
+}
+
+.person-timeline__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rename {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.rename input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+}

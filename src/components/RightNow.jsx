@@ -3,6 +3,7 @@ import { useAppData } from '../context/AppDataContext'
 import { geminiEnabled, breakDownTask } from '../gemini'
 import { formatDayLabel, isOverdue, isToday } from '../utils/time'
 import TaskCapture from './TaskCapture'
+import TaskEditor from './TaskEditor'
 
 // The antidote to a wall of 40 tasks: show exactly one thing. "Not now"
 // just moves to the next candidate for this session — it never reorders
@@ -21,6 +22,7 @@ export default function RightNow() {
   const [skip, setSkip] = useState(0)
   const [breaking, setBreaking] = useState(false)
   const [breakError, setBreakError] = useState('')
+  const [editing, setEditing] = useState(false)
 
   const queue = useMemo(() => prioritize(tasks), [tasks])
   const index = skip % Math.max(queue.length, 1)
@@ -67,6 +69,7 @@ export default function RightNow() {
           <div className="right-now__card">
             <p className="right-now__eyebrow">Right now</p>
             <h1 className="right-now__title">{current.title}</h1>
+            {current.notes && <p className="right-now__notes">{current.notes}</p>}
             <div className="right-now__meta">
               {current.dueAt && (
                 <span className={isOverdue(current.dueAt) ? 'meta-pill meta-pill--overdue' : 'meta-pill'}>
@@ -92,6 +95,7 @@ export default function RightNow() {
             <div className="right-now__actions">
               <button className="btn btn--primary" onClick={complete}>Done</button>
               <button className="btn" onClick={() => setSkip((s) => s + 1)}>Not now</button>
+              <button className="btn btn--ghost" onClick={() => setEditing(true)}>Edit</button>
               {geminiEnabled && !current.steps?.length && (
                 <button className="btn btn--ghost" onClick={handleBreakDown} disabled={breaking}>
                   {breaking ? 'Breaking it down…' : '✦ Break it down'}
@@ -106,6 +110,8 @@ export default function RightNow() {
           )}
         </div>
       )}
+
+      {editing && current && <TaskEditor task={current} onClose={() => setEditing(false)} />}
     </div>
   )
 }

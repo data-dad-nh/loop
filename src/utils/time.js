@@ -66,3 +66,21 @@ export function dayProgressPercent(date = new Date()) {
   const mins = date.getHours() * 60 + date.getMinutes()
   return (mins / 1440) * 100
 }
+
+// Values for <input type="date"> and <input type="time"> in local time,
+// used when pre-filling the edit forms.
+function pad(n) {
+  return String(n).padStart(2, '0')
+}
+
+export function toDateInputValue(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+export function toTimeInputValue(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
