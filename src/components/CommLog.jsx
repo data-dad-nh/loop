@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { extractActionItems, geminiEnabled } from '../gemini'
 import CommEntryRow, { TYPES } from './CommEntryRow'
+import NoteAssist from './NoteAssist'
 import PersonTimeline from './PersonTimeline'
 
 function EntryForm() {
@@ -71,6 +72,7 @@ function EntryForm() {
         value={summary}
         onChange={(e) => setSummary(e.target.value)}
       />
+      <NoteAssist value={summary} onApply={setSummary} />
       <button className="btn btn--primary" type="submit" disabled={!summary.trim() || extracting}>
         {extracting ? 'Logging…' : 'Log it'}
       </button>

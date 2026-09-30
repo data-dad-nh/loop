@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { toDateInputValue, toTimeInputValue } from '../utils/time'
+import NoteAssist from './NoteAssist'
 
 // Bottom sheet for editing an existing task. Clearing the date removes the
 // due date entirely (the task moves to "No date"), which is how you
@@ -44,6 +45,7 @@ export default function TaskEditor({ task, onClose }) {
           <span>Notes</span>
           <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        <NoteAssist value={notes} onApply={setNotes} />
 
         <label className="field">
           <span>Due</span>

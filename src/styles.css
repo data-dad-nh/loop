@@ -768,3 +768,45 @@ button, input, textarea, select {
   padding: 8px 10px;
   background: var(--surface);
 }
+
+/* ---------- note assist ---------- */
+.comm-row__summary,
+.task-row__notes,
+.right-now__notes {
+  white-space: pre-line;
+}
+
+.note-assist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note-assist__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.chip:disabled { opacity: 0.45; }
+
+.note-assist__preview {
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-assist__label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.note-assist__text {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.45;
+}

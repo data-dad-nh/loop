@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { makeId } from '../utils/id'
 import { relativeFromNow } from '../utils/time'
+import NoteAssist from './NoteAssist'
 
 export const TYPES = [
   { id: 'call', label: 'Call' },
@@ -90,6 +91,7 @@ export default function CommEntryRow({ entry, personName }) {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
           />
+          <NoteAssist value={summary} onApply={setSummary} />
 
           {items.length > 0 && (
             <ul className="edit-items">
