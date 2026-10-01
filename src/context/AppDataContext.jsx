@@ -1,51 +1,67 @@
-import { createContext, useContext, useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { firebaseEnabled } from '../firebase'
-import { mergeByUpdatedAt, removeDoc, subscribeCollection, upsertDoc } from '../firestoreSync'
+import { mergeByUpdatedAt, subscribeCollection, upsertDoc } from '../firestoreSync'
 import { makeId } from '../utils/id'
 
 const AppDataContext = createContext(null)
 
 function useSyncedList(storageKey, firestoreName) {
-  const [items, setItems] = useLocalStorage(storageKey, [])
-  const itemsRef = useRef(items)
-  itemsRef.current = items
+  const [all, setAll] = useLocalStorage(storageKey, [])
+  // The ref is the working copy. Reading it (instead of React state inside a
+  // functional updater) means every change is computed and pushed to Firestore
+  // synchronously, never "later, if React gets around to running the updater".
+  const ref = useRef(all)
+
+  function commit(next) {
+    ref.current = next
+    setAll(next)
+  }
 
   useEffect(() => {
     if (!firebaseEnabled) return
-    const unsubscribe = subscribeCollection(firestoreName, (remote) => {
-      setItems((local) => mergeByUpdatedAt(local, remote))
+    return subscribeCollection(firestoreName, (remote) => {
+      const { merged, changed, toPush } = mergeByUpdatedAt(ref.current, remote)
+      if (changed) commit(merged)
+      toPush.forEach((item) => upsertDoc(firestoreName, item))
     })
-    return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function add(partial) {
     const item = { id: makeId(), createdAt: new Date().toISOString(), updatedAt: Date.now(), ...partial }
-    setItems((list) => [item, ...list])
+    commit([item, ...ref.current])
     upsertDoc(firestoreName, item)
     return item
   }
 
   function update(id, patch) {
-    let updated = null
-    setItems((list) =>
-      list.map((item) => {
-        if (item.id !== id) return item
-        updated = { ...item, ...patch, updatedAt: Date.now() }
-        return updated
-      })
-    )
-    // upsertDoc needs the merged object; stash it after state settles
-    queueMicrotask(() => updated && upsertDoc(firestoreName, updated))
+    const existing = ref.current.find((i) => i.id === id)
+    if (!existing) return
+    const updated = { ...existing, ...patch, updatedAt: Date.now() }
+    commit(ref.current.map((i) => (i.id === id ? updated : i)))
+    upsertDoc(firestoreName, updated)
   }
 
+  // With sync on, a delete is a "tombstone": the item is marked deleted and
+  // that mark syncs like any other edit, so other devices drop it too.
+  // (Removing the cloud copy instead would look, to other devices, like an
+  // item they should keep.) Without sync there is nothing to tell, so it's a
+  // plain removal.
   function remove(id) {
-    setItems((list) => list.filter((item) => item.id !== id))
-    removeDoc(firestoreName, id)
+    const existing = ref.current.find((i) => i.id === id)
+    if (!existing) return
+    if (!firebaseEnabled) {
+      commit(ref.current.filter((i) => i.id !== id))
+      return
+    }
+    const tombstone = { ...existing, deleted: true, updatedAt: Date.now() }
+    commit(ref.current.map((i) => (i.id === id ? tombstone : i)))
+    upsertDoc(firestoreName, tombstone)
   }
 
-  return [items, { add, update, remove, setItems }]
+  const visible = useMemo(() => all.filter((i) => !i.deleted), [all])
+  return [visible, { add, update, remove }]
 }
 
 export function AppDataProvider({ children }) {
