@@ -810,3 +810,16 @@ button, input, textarea, select {
   white-space: pre-line;
   line-height: 1.45;
 }
+
+/* ---------- icon badge opt-in ---------- */
+.badge-optin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 20px 0;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
