@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { formatDayLabel, isOverdue, isToday } from '../utils/time'
+import { describeRepeat } from '../utils/recurrence'
 import TaskCapture from './TaskCapture'
 import DayTimeline from './DayTimeline'
 import TaskEditor from './TaskEditor'
@@ -16,7 +17,7 @@ function groupTasks(tasks) {
 }
 
 export default function TaskList() {
-  const { tasks, updateTask, removeTask, people } = useAppData()
+  const { tasks, completeTask, removeTask, people } = useAppData()
   const [editingTask, setEditingTask] = useState(null)
   const groups = useMemo(() => groupTasks(tasks), [tasks])
   const personName = (id) => people.find((p) => p.id === id)?.name
@@ -47,7 +48,7 @@ export default function TaskList() {
                       <input
                         type="checkbox"
                         checked={false}
-                        onChange={() => updateTask(t.id, { completed: true, completedAt: new Date().toISOString() })}
+                        onChange={() => completeTask(t.id)}
                       />
                     </label>
                     <button className="task-row__body task-row__body--button" onClick={() => setEditingTask(t)} aria-label={`Edit ${t.title}`}>
@@ -55,6 +56,7 @@ export default function TaskList() {
                       <span className="task-row__meta">
                         {t.dueAt && <span>{formatDayLabel(t.dueAt)}</span>}
                         {t.estimatedMinutes && <span>~{t.estimatedMinutes}m</span>}
+                        {t.repeat && <span>↻ {describeRepeat(t.repeat)}</span>}
                         {personName(t.linkedPersonId) && <span>{personName(t.linkedPersonId)}</span>}
                       </span>
                       {t.notes && <span className="task-row__notes">{t.notes}</span>}

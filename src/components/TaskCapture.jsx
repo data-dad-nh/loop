@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { geminiEnabled, parseTaskFromText } from '../gemini'
+import { toDateInputValue } from '../utils/time'
+import { finalizeRepeat } from '../utils/recurrence'
+import RepeatPicker from './RepeatPicker'
 
 // The single most important interaction in the app: capture a thought in
 // one tap, with zero forced categorization. Everything else (due date,
@@ -14,6 +17,7 @@ export default function TaskCapture() {
   const [dueTime, setDueTime] = useState('')
   const [minutes, setMinutes] = useState('')
   const [personName, setPersonName] = useState('')
+  const [repeat, setRepeat] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -41,6 +45,13 @@ export default function TaskCapture() {
       }
     }
 
+    // A repeating task needs a due date to repeat from; default to today at 9.
+    if (repeat && !dueAt) {
+      const t = new Date()
+      t.setHours(9, 0, 0, 0)
+      dueAt = t.toISOString()
+    }
+
     const person = personName.trim() ? findOrCreatePerson(personName.trim()) : null
 
     addTask({
@@ -52,6 +63,7 @@ export default function TaskCapture() {
       completedAt: null,
       linkedPersonId: person?.id ?? null,
       steps: [],
+      repeat: finalizeRepeat(repeat, dueAt ? toDateInputValue(dueAt) : ''),
     })
 
     setText('')
@@ -59,6 +71,7 @@ export default function TaskCapture() {
     setDueTime('')
     setMinutes('')
     setPersonName('')
+    setRepeat(null)
     setShowDetails(false)
     setBusy(false)
   }
@@ -103,6 +116,7 @@ export default function TaskCapture() {
               <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
             </div>
           </label>
+          <RepeatPicker value={repeat} onChange={setRepeat} dueDate={dueDate} />
           <label className="field">
             <span>Takes about (min)</span>
             <input type="number" min="1" placeholder="15" value={minutes} onChange={(e) => setMinutes(e.target.value)} />

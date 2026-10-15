@@ -823,3 +823,49 @@ button, input, textarea, select {
   border-radius: var(--radius);
   font-size: 0.85rem;
 }
+
+/* ---------- repeat picker ---------- */
+.repeat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.repeat__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.repeat__row input,
+.repeat__row select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.repeat__row input { width: 64px; }
+
+.repeat__days {
+  display: flex;
+  gap: 6px;
+}
+
+.repeat__days .chip {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.repeat__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}

@@ -2,29 +2,33 @@ import { useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { geminiEnabled, breakDownTask } from '../gemini'
 import { formatDayLabel, isOverdue, isToday } from '../utils/time'
+import { describeRepeat } from '../utils/recurrence'
 import TaskCapture from './TaskCapture'
 import TaskEditor from './TaskEditor'
 
-// The antidote to a wall of 40 tasks: show exactly one thing. "Not now"
-// just moves to the next candidate for this session — it never reorders
-// or penalizes anything, because a skipped task is not a failed task.
+// The antidote to a wall of 40 tasks: show exactly one thing. Only tasks that
+// are overdue, due today, or have no date are candidates; anything dated for a
+// later day stays out of sight here (it is still in the Tasks tab) until its
+// day arrives. "Not now" just moves to the next candidate for this session. It
+// never reorders or penalizes anything, because a skipped task is not a failed
+// task.
 function prioritize(tasks) {
   const open = tasks.filter((t) => !t.completed)
   const overdue = open.filter((t) => t.dueAt && isOverdue(t.dueAt)).sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt))
   const dueToday = open.filter((t) => t.dueAt && !isOverdue(t.dueAt) && isToday(t.dueAt)).sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt))
   const noDate = open.filter((t) => !t.dueAt).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-  const future = open.filter((t) => t.dueAt && !isOverdue(t.dueAt) && !isToday(t.dueAt)).sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt))
-  return [...overdue, ...dueToday, ...noDate, ...future]
+  return [...overdue, ...dueToday, ...noDate]
 }
 
 export default function RightNow() {
-  const { tasks, updateTask } = useAppData()
+  const { tasks, updateTask, completeTask } = useAppData()
   const [skip, setSkip] = useState(0)
   const [breaking, setBreaking] = useState(false)
   const [breakError, setBreakError] = useState('')
   const [editing, setEditing] = useState(false)
 
   const queue = useMemo(() => prioritize(tasks), [tasks])
+  const hasUpcoming = tasks.some((t) => !t.completed && t.dueAt && !isOverdue(t.dueAt) && !isToday(t.dueAt))
   const index = skip % Math.max(queue.length, 1)
   const current = queue[index]
   const upNext = queue[index + 1]
@@ -49,7 +53,12 @@ export default function RightNow() {
   }
 
   function complete() {
-    updateTask(current.id, { completed: true, completedAt: new Date().toISOString() })
+    completeTask(current.id)
+    setSkip(0)
+  }
+
+  function skipOccurrence() {
+    completeTask(current.id, { skipped: true })
     setSkip(0)
   }
 
@@ -59,8 +68,17 @@ export default function RightNow() {
 
       {!current && (
         <div className="empty-state">
-          <p>Nothing queued up.</p>
-          <p className="empty-state__sub">Add something above, or take a breath — an empty list is a fine place to be.</p>
+          {hasUpcoming ? (
+            <>
+              <p>Nothing due today.</p>
+              <p className="empty-state__sub">Your upcoming tasks are waiting in the Tasks tab.</p>
+            </>
+          ) : (
+            <>
+              <p>Nothing queued up.</p>
+              <p className="empty-state__sub">Add something above, or take a breath — an empty list is a fine place to be.</p>
+            </>
+          )}
         </div>
       )}
 
@@ -77,6 +95,7 @@ export default function RightNow() {
                 </span>
               )}
               {current.estimatedMinutes && <span className="meta-pill">~{current.estimatedMinutes} min</span>}
+              {current.repeat && <span className="meta-pill">↻ {describeRepeat(current.repeat)}</span>}
             </div>
 
             {current.steps?.length > 0 && (
@@ -96,6 +115,9 @@ export default function RightNow() {
               <button className="btn btn--primary" onClick={complete}>Done</button>
               <button className="btn" onClick={() => setSkip((s) => s + 1)}>Not now</button>
               <button className="btn btn--ghost" onClick={() => setEditing(true)}>Edit</button>
+              {current.repeat && (
+                <button className="btn btn--ghost" onClick={skipOccurrence}>Skip this one</button>
+              )}
               {geminiEnabled && !current.steps?.length && (
                 <button className="btn btn--ghost" onClick={handleBreakDown} disabled={breaking}>
                   {breaking ? 'Breaking it down…' : '✦ Break it down'}

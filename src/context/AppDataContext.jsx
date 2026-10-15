@@ -3,6 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { firebaseEnabled } from '../firebase'
 import { mergeByUpdatedAt, subscribeCollection, upsertDoc } from '../firestoreSync'
 import { makeId } from '../utils/id'
+import { nextDueDate } from '../utils/recurrence'
 
 const AppDataContext = createContext(null)
 
@@ -60,8 +61,13 @@ function useSyncedList(storageKey, firestoreName) {
     upsertDoc(firestoreName, tombstone)
   }
 
+  // Reads the working copy, including items marked deleted.
+  function get(id) {
+    return ref.current.find((i) => i.id === id)
+  }
+
   const visible = useMemo(() => all.filter((i) => !i.deleted), [all])
-  return [visible, { add, update, remove }]
+  return [visible, { add, update, remove, get }]
 }
 
 export function AppDataProvider({ children }) {
@@ -77,8 +83,42 @@ export function AppDataProvider({ children }) {
     return peopleOps.add({ name: trimmed })
   }
 
+  // Finishing (or skipping) a task. For a repeating task this also creates the
+  // next occurrence. Its id comes from the series and occurrence number, so two
+  // devices finishing the same occurrence create the same item, and the normal
+  // sync merge leaves one copy instead of two.
+  function completeTask(id, { skipped = false } = {}) {
+    const task = taskOps.get(id)
+    if (!task || task.deleted || task.completed) return
+    taskOps.update(id, { completed: true, completedAt: new Date().toISOString(), skipped })
+    if (!task.repeat) return
+
+    const seriesId = task.seriesId ?? task.id
+    const occurrence = (task.occurrence ?? 0) + 1
+    const nextId = `${seriesId}-${occurrence}`
+    if (taskOps.get(nextId)) return // another device already made it
+
+    taskOps.add({
+      id: nextId,
+      title: task.title,
+      notes: task.notes ?? '',
+      dueAt: nextDueDate(task).toISOString(),
+      estimatedMinutes: task.estimatedMinutes ?? null,
+      completed: false,
+      completedAt: null,
+      skipped: false,
+      linkedPersonId: task.linkedPersonId ?? null,
+      // same steps, all unchecked again
+      steps: (task.steps ?? []).map((s, i) => ({ id: `${nextId}-s${i}`, text: s.text, done: false })),
+      repeat: task.repeat,
+      seriesId,
+      occurrence,
+    })
+  }
+
   const value = {
     tasks,
+    completeTask,
     addTask: taskOps.add,
     updateTask: taskOps.update,
     removeTask: taskOps.remove,
