@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useTimeRefresh } from '../hooks/useTimeRefresh'
+import { startOfDay } from '../utils/time'
 
 const PRESETS = [10, 25, 45]
 
@@ -119,13 +121,16 @@ export default function FocusTimer() {
   const ss = String(secondsLeft % 60).padStart(2, '0')
   const progress = 1 - secondsLeft / (minutes * 60)
 
+  const timeVersion = useTimeRefresh() // "today" changes at midnight even if nothing else does
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const todayCount = useMemo(() => {
     const today = new Date().toDateString()
     return log.filter((s) => new Date(s.date).toDateString() === today).length
-  }, [log])
+  }, [log, timeVersion])
 
   const lastSessionDate = log.length ? new Date(log[log.length - 1].date) : null
-  const daysSinceLast = lastSessionDate ? Math.floor((Date.now() - lastSessionDate.getTime()) / 86400000) : null
+  // Whole calendar days, so a 9pm session is "1 day ago" the next morning, not "today".
+  const daysSinceLast = lastSessionDate ? Math.round((startOfDay() - startOfDay(lastSessionDate)) / 86400000) : null
 
   return (
     <div className="screen">

@@ -3,6 +3,7 @@ import { useAppData } from '../context/AppDataContext'
 import { geminiEnabled, breakDownTask } from '../gemini'
 import { formatDayLabel, isOverdue, isToday } from '../utils/time'
 import { describeRepeat } from '../utils/recurrence'
+import { useTimeRefresh } from '../hooks/useTimeRefresh'
 import TaskCapture from './TaskCapture'
 import TaskEditor from './TaskEditor'
 
@@ -27,7 +28,9 @@ export default function RightNow() {
   const [breakError, setBreakError] = useState('')
   const [editing, setEditing] = useState(false)
 
-  const queue = useMemo(() => prioritize(tasks), [tasks])
+  const timeVersion = useTimeRefresh() // re-sort when the app returns to view or the day changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const queue = useMemo(() => prioritize(tasks), [tasks, timeVersion])
   const hasUpcoming = tasks.some((t) => !t.completed && t.dueAt && !isOverdue(t.dueAt) && !isToday(t.dueAt))
   const index = skip % Math.max(queue.length, 1)
   const current = queue[index]

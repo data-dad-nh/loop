@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { formatDayLabel, isOverdue, isToday } from '../utils/time'
 import { describeRepeat } from '../utils/recurrence'
+import { useTimeRefresh } from '../hooks/useTimeRefresh'
 import TaskCapture from './TaskCapture'
 import DayTimeline from './DayTimeline'
 import TaskEditor from './TaskEditor'
@@ -19,7 +20,9 @@ function groupTasks(tasks) {
 export default function TaskList() {
   const { tasks, completeTask, removeTask, people } = useAppData()
   const [editingTask, setEditingTask] = useState(null)
-  const groups = useMemo(() => groupTasks(tasks), [tasks])
+  const timeVersion = useTimeRefresh() // regroup when the app returns to view or the day changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => groupTasks(tasks), [tasks, timeVersion])
   const personName = (id) => people.find((p) => p.id === id)?.name
 
   const sections = [
