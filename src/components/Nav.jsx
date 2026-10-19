@@ -5,9 +5,9 @@ const TABS = [
   { id: 'log', label: 'Log', icon: LogIcon },
 ]
 
-export default function Nav({ active, onChange }) {
+export default function Nav({ active, onChange, inert }) {
   return (
-    <nav className="nav">
+    <nav className="nav" inert={inert}>
       {TABS.map((tab) => {
         const Icon = tab.icon
         const isActive = active === tab.id

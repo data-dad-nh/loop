@@ -4,6 +4,7 @@ import RightNow from './components/RightNow'
 import TaskList from './components/TaskList'
 import FocusTimer from './components/FocusTimer'
 import CommLog from './components/CommLog'
+import SearchOverlay from './components/SearchOverlay'
 import { useAppData } from './context/AppDataContext'
 import { useTaskNudges } from './hooks/useTaskNudges'
 import { useAppBadge } from './hooks/useAppBadge'
@@ -18,6 +19,7 @@ const SCREENS = {
 
 export default function App() {
   const [tab, setTab] = useState('now')
+  const [searching, setSearching] = useState(false)
   const { tasks } = useAppData()
   useTaskNudges(tasks)
   const badge = useAppBadge(tasks)
@@ -26,25 +28,34 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <header className="app__header" inert={searching}>
         <span className="app__logo">Loop</span>
-        {!firebaseEnabled && <span className="app__badge">This device only</span>}
+        <div className="app__header-actions">
+          {!firebaseEnabled && <span className="app__badge">This device only</span>}
+          <button className="app__search" aria-label="Search" onClick={() => setSearching(true)}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4.5 4.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </header>
       {badge.needsPermission && (
-        <div className="badge-optin">
+        <div className="badge-optin" inert={searching}>
           <span>Show your due-today and overdue count on the app icon?</span>
           <button className="chip chip--active" onClick={badge.enable}>Turn on</button>
         </div>
       )}
       {badge.blocked && (
-        <div className="badge-optin">
+        <div className="badge-optin" inert={searching}>
           <span>To show the count on the icon, allow notifications for this app in iPhone Settings.</span>
         </div>
       )}
-      <main className="app__main">
+      <main className="app__main" inert={searching}>
         <Screen />
       </main>
-      <Nav active={tab} onChange={setTab} />
+      <Nav active={tab} onChange={setTab} inert={searching} />
+      {searching && <SearchOverlay onClose={() => setSearching(false)} />}
     </div>
   )
 }
