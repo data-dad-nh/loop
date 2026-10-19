@@ -968,3 +968,119 @@ button, input, textarea, select {
 .search__collapse-row .comm-list { width: 100%; }
 
 .comm-row__addtask:disabled { opacity: 0.5; }
+
+/* ---------- lists ---------- */
+.list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 -8px;
+}
+
+.list-title {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+
+.progress {
+  display: block;
+  height: 8px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress--thin { height: 5px; margin-top: 8px; }
+
+.progress__bar {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.list-progress {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.list-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list-heading {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.list-item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.list-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+}
+
+.list-item input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.list-add {
+  display: flex;
+  gap: 8px;
+}
+
+.list-add input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+}
+
+.list-card { display: block; }
+.list-card__main { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.list-card__sub { font-size: 0.8rem; color: var(--ink-soft); }
+
+.list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.list-edit__heading { font-weight: 600; }
+
+.list-edit__move {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  width: 34px;
+  height: 36px;
+  color: var(--ink);
+}
+
+.list-edit__move:disabled { opacity: 0.35; }
+
+.list-edit__delete { align-self: flex-start; color: var(--warm); }

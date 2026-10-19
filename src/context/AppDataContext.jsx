@@ -74,6 +74,7 @@ export function AppDataProvider({ children }) {
   const [tasks, taskOps] = useSyncedList('loop.tasks', 'tasks')
   const [commLog, commOps] = useSyncedList('loop.commLog', 'commLog')
   const [people, peopleOps] = useSyncedList('loop.people', 'people')
+  const [procedures, procedureOps] = useSyncedList('loop.procedures', 'procedures')
 
   function findOrCreatePerson(name) {
     const trimmed = name.trim()
@@ -133,6 +134,11 @@ export function AppDataProvider({ children }) {
     updatePerson: peopleOps.update,
     removePerson: peopleOps.remove,
     findOrCreatePerson,
+
+    procedures,
+    addProcedure: procedureOps.add,
+    updateProcedure: procedureOps.update,
+    removeProcedure: procedureOps.remove,
   }
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

@@ -1,7 +1,7 @@
 const TABS = [
   { id: 'now', label: 'Now', icon: NowIcon },
   { id: 'tasks', label: 'Tasks', icon: TasksIcon },
-  { id: 'focus', label: 'Focus', icon: FocusIcon },
+  { id: 'lists', label: 'Lists', icon: ListsIcon },
   { id: 'log', label: 'Log', icon: LogIcon },
 ]
 
@@ -43,11 +43,12 @@ function TasksIcon() {
     </svg>
   )
 }
-function FocusIcon() {
+function ListsIcon() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="12" r="8.5" />
-      <circle cx="12" cy="12" r="3" />
+      <path d="M4.5 6.5l1.6 1.6 2.9-3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.5 13.5l1.6 1.6 2.9-3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 7h7.5M12 14h7.5M4.5 19.5h4M12 19.5h7.5" strokeLinecap="round" />
     </svg>
   )
 }

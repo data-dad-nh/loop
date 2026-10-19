@@ -44,9 +44,11 @@ const byDueThenNewest = (a, b) => {
   return aDue - bDue
 }
 
-export function searchAll({ tasks, commLog, people }, query, limit = 50) {
+export function searchAll({ tasks, commLog, people, procedures = [] }, query, limit = 50) {
   const terms = parseTerms(query)
-  if (!terms.length) return { terms, entries: [], people: [], tasks: [], totals: { entries: 0, people: 0, tasks: 0 } }
+  if (!terms.length) {
+    return { terms, entries: [], people: [], lists: [], tasks: [], totals: { entries: 0, people: 0, lists: 0, tasks: 0 } }
+  }
 
   const nameOf = new Map(people.map((p) => [p.id, p.name]))
   const name = (id) => nameOf.get(id) ?? ''
@@ -61,6 +63,11 @@ export function searchAll({ tasks, commLog, people }, query, limit = 50) {
 
   const matchedPeople = people.filter((p) => hasAll(p.name, terms)).sort((a, b) => a.name.localeCompare(b.name))
 
+  // Reusable lists match on their name or any item or heading in them.
+  const matchedLists = procedures
+    .filter((l) => hasAll([l.title, ...(l.items ?? []).map((i) => i.text)].join('\n'), terms))
+    .sort((a, b) => a.title.localeCompare(b.title))
+
   const matchedTasks = tasks.filter((t) =>
     hasAll([t.title, t.notes, name(t.linkedPersonId), ...(t.steps ?? []).map((s) => s.text)].join('\n'), terms)
   )
@@ -74,8 +81,9 @@ export function searchAll({ tasks, commLog, people }, query, limit = 50) {
     terms,
     entries: entries.slice(0, limit),
     people: matchedPeople.slice(0, limit),
+    lists: matchedLists.slice(0, limit),
     tasks: orderedTasks.slice(0, limit),
-    totals: { entries: entries.length, people: matchedPeople.length, tasks: orderedTasks.length },
+    totals: { entries: entries.length, people: matchedPeople.length, lists: matchedLists.length, tasks: orderedTasks.length },
   }
 }
 

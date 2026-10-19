@@ -11,19 +11,19 @@ import TaskEditor from './TaskEditor'
 // Full-screen search over calls/emails, people, and tasks (including finished
 // ones). Calls and emails are listed first, since finding what was said is the
 // main reason to search.
-export default function SearchOverlay({ onClose }) {
-  const { tasks, commLog, people, addTask } = useAppData()
+export default function SearchOverlay({ onClose, onOpenList }) {
+  const { tasks, commLog, people, procedures, addTask } = useAppData()
   const [query, setQuery] = useState('')
   const [personId, setPersonId] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [added, setAdded] = useState(() => new Set())
 
-  const results = useMemo(() => searchAll({ tasks, commLog, people }, query), [tasks, commLog, people, query])
+  const results = useMemo(() => searchAll({ tasks, commLog, people, procedures }, query), [tasks, commLog, people, procedures, query])
   const nameOf = (id) => people.find((p) => p.id === id)?.name
   const entryCount = (id) => commLog.filter((e) => e.personId === id).length
   const { terms, totals } = results
-  const anything = totals.entries + totals.people + totals.tasks > 0
+  const anything = totals.entries + totals.people + totals.lists + totals.tasks > 0
 
   useEffect(() => {
     const onKey = (e) => {
@@ -145,6 +145,33 @@ export default function SearchOverlay({ onClose }) {
                       </button>
                     </li>
                   ))}
+                </ul>
+              </section>
+            )}
+
+            {results.lists.length > 0 && (
+              <section>
+                {heading('Lists', results.lists.length, totals.lists)}
+                <ul className="people-list">
+                  {results.lists.map((l) => {
+                    const hit = (l.items ?? []).find(
+                      (i) => i.kind !== 'heading' && terms.some((t) => fold(i.text).includes(t))
+                    )
+                    return (
+                      <li key={l.id}>
+                        <button className="people-row list-card" onClick={() => onOpenList(l.id)}>
+                          <span className="list-card__main">
+                            <span className="people-row__name"><Highlight text={l.title} terms={terms} /></span>
+                            {hit && (
+                              <span className="list-card__sub">
+                                Item: <Highlight text={hit.text} terms={terms} />
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               </section>
             )}

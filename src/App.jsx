@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Nav from './components/Nav'
 import RightNow from './components/RightNow'
 import TaskList from './components/TaskList'
-import FocusTimer from './components/FocusTimer'
+import Lists from './components/Lists'
 import CommLog from './components/CommLog'
 import SearchOverlay from './components/SearchOverlay'
 import { useAppData } from './context/AppDataContext'
@@ -13,13 +13,14 @@ import { firebaseEnabled } from './firebase'
 const SCREENS = {
   now: RightNow,
   tasks: TaskList,
-  focus: FocusTimer,
+  lists: Lists,
   log: CommLog,
 }
 
 export default function App() {
   const [tab, setTab] = useState('now')
   const [searching, setSearching] = useState(false)
+  const [openListId, setOpenListId] = useState(null)
   const { tasks } = useAppData()
   useTaskNudges(tasks)
   const badge = useAppBadge(tasks)
@@ -52,10 +53,19 @@ export default function App() {
         </div>
       )}
       <main className="app__main" inert={searching}>
-        <Screen />
+        <Screen openListId={openListId} onOpenList={setOpenListId} />
       </main>
       <Nav active={tab} onChange={setTab} inert={searching} />
-      {searching && <SearchOverlay onClose={() => setSearching(false)} />}
+      {searching && (
+        <SearchOverlay
+          onClose={() => setSearching(false)}
+          onOpenList={(id) => {
+            setOpenListId(id)
+            setTab('lists')
+            setSearching(false)
+          }}
+        />
+      )}
     </div>
   )
 }
