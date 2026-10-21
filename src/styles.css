@@ -1084,3 +1084,59 @@ button, input, textarea, select {
 .list-edit__move:disabled { opacity: 0.35; }
 
 .list-edit__delete { align-self: flex-start; color: var(--warm); }
+
+/* ---------- trackers ---------- */
+.chips-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tracker-chart {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px;
+}
+
+.tracker-status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.tracker-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tracker-field-row input,
+.tracker-field-row select {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.tracker-field-row > input[aria-label='Detail name'] { flex: 1; }
+.tracker-field-row__options { flex-basis: 100%; }
+
+.tracker-private span { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+
+.comm-form .field input[type='number'],
+.comm-form .field input[type='datetime-local'],
+.sheet .field input[type='datetime-local'] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+}

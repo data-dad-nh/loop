@@ -19,8 +19,13 @@ function useSyncedList(storageKey, firestoreName) {
     setAll(next)
   }
 
+  // A null collection name means this list stays on this device and is never uploaded.
+  const push = (item) => {
+    if (firestoreName) upsertDoc(firestoreName, item)
+  }
+
   useEffect(() => {
-    if (!firebaseEnabled) return
+    if (!firebaseEnabled || !firestoreName) return
     return subscribeCollection(firestoreName, (remote) => {
       const { merged, changed, toPush } = mergeByUpdatedAt(ref.current, remote)
       if (changed) commit(merged)
@@ -32,7 +37,7 @@ function useSyncedList(storageKey, firestoreName) {
   function add(partial) {
     const item = { id: makeId(), createdAt: new Date().toISOString(), updatedAt: Date.now(), ...partial }
     commit([item, ...ref.current])
-    upsertDoc(firestoreName, item)
+    push(item)
     return item
   }
 
@@ -41,7 +46,7 @@ function useSyncedList(storageKey, firestoreName) {
     if (!existing) return
     const updated = { ...existing, ...patch, updatedAt: Date.now() }
     commit(ref.current.map((i) => (i.id === id ? updated : i)))
-    upsertDoc(firestoreName, updated)
+    push(updated)
   }
 
   // With sync on, a delete is a "tombstone": the item is marked deleted and
@@ -52,13 +57,15 @@ function useSyncedList(storageKey, firestoreName) {
   function remove(id) {
     const existing = ref.current.find((i) => i.id === id)
     if (!existing) return
-    if (!firebaseEnabled) {
+    if (!firebaseEnabled || !firestoreName) {
       commit(ref.current.filter((i) => i.id !== id))
       return
     }
-    const tombstone = { ...existing, deleted: true, updatedAt: Date.now() }
+    // The marker keeps only what other devices need to drop the item. The
+    // content itself is not kept in the cloud copy.
+    const tombstone = { id: existing.id, createdAt: existing.createdAt, deleted: true, updatedAt: Date.now() }
     commit(ref.current.map((i) => (i.id === id ? tombstone : i)))
-    upsertDoc(firestoreName, tombstone)
+    push(tombstone)
   }
 
   // Reads the working copy, including items marked deleted.
@@ -75,6 +82,40 @@ export function AppDataProvider({ children }) {
   const [commLog, commOps] = useSyncedList('loop.commLog', 'commLog')
   const [people, peopleOps] = useSyncedList('loop.people', 'people')
   const [procedures, procedureOps] = useSyncedList('loop.procedures', 'procedures')
+
+  // Trackers: normal ones sync. "Private" ones live in their own storage that is
+  // never uploaded, so nothing about them reaches the cloud.
+  const [pubTrackers, pubTrackerOps] = useSyncedList('loop.trackers', 'trackers')
+  const [pubEntries, pubEntryOps] = useSyncedList('loop.trackerEntries', 'trackerEntries')
+  const [privTrackers, privTrackerOps] = useSyncedList('loop.privateTrackers', null)
+  const [privEntries, privEntryOps] = useSyncedList('loop.privateEntries', null)
+
+  const trackers = useMemo(
+    () => [...pubTrackers.map((t) => ({ ...t, private: false })), ...privTrackers.map((t) => ({ ...t, private: true }))],
+    [pubTrackers, privTrackers]
+  )
+  const trackerEntries = useMemo(() => [...pubEntries, ...privEntries], [pubEntries, privEntries])
+
+  const isPrivateTracker = (id) => Boolean(privTrackerOps.get(id))
+  const entryOps = (id) => (privEntryOps.get(id) ? privEntryOps : pubEntryOps)
+
+  function addTracker({ name, fields, private: isPrivate = false }) {
+    return (isPrivate ? privTrackerOps : pubTrackerOps).add({ name, fields })
+  }
+  function updateTracker(id, patch) {
+    const { private: _ignored, ...safe } = patch // privacy is fixed when a tracker is created
+    return (isPrivateTracker(id) ? privTrackerOps : pubTrackerOps).update(id, safe)
+  }
+  function removeTracker(id) {
+    const priv = isPrivateTracker(id)
+    for (const e of trackerEntries.filter((x) => x.trackerId === id)) (priv ? privEntryOps : pubEntryOps).remove(e.id)
+    ;(priv ? privTrackerOps : pubTrackerOps).remove(id)
+  }
+  function addTrackerEntry(trackerId, { at, values, note }) {
+    return (isPrivateTracker(trackerId) ? privEntryOps : pubEntryOps).add({ trackerId, at, values, note })
+  }
+  const updateTrackerEntry = (id, patch) => entryOps(id).update(id, patch)
+  const removeTrackerEntry = (id) => entryOps(id).remove(id)
 
   function findOrCreatePerson(name) {
     const trimmed = name.trim()
@@ -139,6 +180,15 @@ export function AppDataProvider({ children }) {
     addProcedure: procedureOps.add,
     updateProcedure: procedureOps.update,
     removeProcedure: procedureOps.remove,
+
+    trackers,
+    trackerEntries,
+    addTracker,
+    updateTracker,
+    removeTracker,
+    addTrackerEntry,
+    updateTrackerEntry,
+    removeTrackerEntry,
   }
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

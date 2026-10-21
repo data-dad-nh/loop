@@ -2,6 +2,7 @@ const TABS = [
   { id: 'now', label: 'Now', icon: NowIcon },
   { id: 'tasks', label: 'Tasks', icon: TasksIcon },
   { id: 'lists', label: 'Lists', icon: ListsIcon },
+  { id: 'track', label: 'Track', icon: TrackIcon },
   { id: 'log', label: 'Log', icon: LogIcon },
 ]
 
@@ -49,6 +50,14 @@ function ListsIcon() {
       <path d="M4.5 6.5l1.6 1.6 2.9-3" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M4.5 13.5l1.6 1.6 2.9-3" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M12 7h7.5M12 14h7.5M4.5 19.5h4M12 19.5h7.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+function TrackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 19.5h16" strokeLinecap="round" />
+      <path d="M5.5 15.5l4-4.5 3.5 3 5.5-7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

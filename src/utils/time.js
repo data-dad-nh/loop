@@ -84,3 +84,9 @@ export function toTimeInputValue(isoString) {
   const d = new Date(isoString)
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
+
+// Value for <input type="datetime-local"> in local time.
+export function toDateTimeInputValue(isoString) {
+  if (!isoString) return ''
+  return `${toDateInputValue(isoString)}T${toTimeInputValue(isoString)}`
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { fold, searchAll } from '../utils/search'
+import { describeEntry } from '../utils/trackers'
 import { makeId } from '../utils/id'
 import { formatDayLabel, relativeFromNow } from '../utils/time'
 import CommEntryRow from './CommEntryRow'
@@ -11,19 +12,27 @@ import TaskEditor from './TaskEditor'
 // Full-screen search over calls/emails, people, and tasks (including finished
 // ones). Calls and emails are listed first, since finding what was said is the
 // main reason to search.
-export default function SearchOverlay({ onClose, onOpenList }) {
-  const { tasks, commLog, people, procedures, addTask } = useAppData()
+export default function SearchOverlay({ onClose, onOpenList, onOpenTracker }) {
+  const { tasks, commLog, people, procedures, trackers, trackerEntries, addTask } = useAppData()
   const [query, setQuery] = useState('')
   const [personId, setPersonId] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [added, setAdded] = useState(() => new Set())
 
-  const results = useMemo(() => searchAll({ tasks, commLog, people, procedures }, query), [tasks, commLog, people, procedures, query])
+  // Private trackers never show up in search.
+  const results = useMemo(() => {
+    const open = trackers.filter((t) => !t.private)
+    const ids = new Set(open.map((t) => t.id))
+    return searchAll(
+      { tasks, commLog, people, procedures, trackers: open, trackerEntries: trackerEntries.filter((e) => ids.has(e.trackerId)) },
+      query
+    )
+  }, [tasks, commLog, people, procedures, trackers, trackerEntries, query])
   const nameOf = (id) => people.find((p) => p.id === id)?.name
   const entryCount = (id) => commLog.filter((e) => e.personId === id).length
   const { terms, totals } = results
-  const anything = totals.entries + totals.people + totals.lists + totals.tasks > 0
+  const anything = totals.entries + totals.people + totals.lists + totals.tracked + totals.tasks > 0
 
   useEffect(() => {
     const onKey = (e) => {
@@ -172,6 +181,32 @@ export default function SearchOverlay({ onClose, onOpenList }) {
                       </li>
                     )
                   })}
+                </ul>
+              </section>
+            )}
+
+            {results.tracked.length > 0 && (
+              <section>
+                {heading('Tracked', results.tracked.length, totals.tracked)}
+                <ul className="people-list">
+                  {results.tracked.map(({ entry, tracker }) => (
+                    <li key={entry.id}>
+                      <button className="people-row list-card" onClick={() => onOpenTracker(tracker.id)}>
+                        <span className="list-card__main">
+                          <span className="people-row__name"><Highlight text={tracker.name} terms={terms} /></span>
+                          <span className="list-card__sub">
+                            {formatDayLabel(entry.at)}
+                            {' · '}
+                            <Highlight
+                              text={[describeEntry(tracker, entry), entry.note].filter(Boolean).join(' — ') || 'Logged'}
+                              terms={terms}
+                              maxLen={160}
+                            />
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </section>
             )}

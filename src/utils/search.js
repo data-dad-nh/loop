@@ -1,3 +1,5 @@
+import { describeEntry } from './trackers'
+
 // Search is plain text matching over data that is already on the device, so it
 // works offline and instantly. Matching ignores capitals, accents, and curly
 // vs straight apostrophes, and EVERY word you type must appear somewhere in an
@@ -44,10 +46,13 @@ const byDueThenNewest = (a, b) => {
   return aDue - bDue
 }
 
-export function searchAll({ tasks, commLog, people, procedures = [] }, query, limit = 50) {
+export function searchAll({ tasks, commLog, people, procedures = [], trackers = [], trackerEntries = [] }, query, limit = 50) {
   const terms = parseTerms(query)
   if (!terms.length) {
-    return { terms, entries: [], people: [], lists: [], tasks: [], totals: { entries: 0, people: 0, lists: 0, tasks: 0 } }
+    return {
+      terms, entries: [], people: [], lists: [], tracked: [], tasks: [],
+      totals: { entries: 0, people: 0, lists: 0, tracked: 0, tasks: 0 },
+    }
   }
 
   const nameOf = new Map(people.map((p) => [p.id, p.name]))
@@ -68,6 +73,17 @@ export function searchAll({ tasks, commLog, people, procedures = [] }, query, li
     .filter((l) => hasAll([l.title, ...(l.items ?? []).map((i) => i.text)].join('\n'), terms))
     .sort((a, b) => a.title.localeCompare(b.title))
 
+  // Logged tracker entries match on the tracker's name, its details, and the note.
+  const trackerById = new Map(trackers.map((t) => [t.id, t]))
+  const matchedTracked = trackerEntries
+    .filter((e) => trackerById.has(e.trackerId))
+    .filter((e) => {
+      const t = trackerById.get(e.trackerId)
+      return hasAll([t.name, ...(t.fields ?? []).map((f) => f.label), describeEntry(t, e), e.note].join('\n'), terms)
+    })
+    .sort((a, b) => new Date(b.at) - new Date(a.at))
+    .map((e) => ({ entry: e, tracker: trackerById.get(e.trackerId) }))
+
   const matchedTasks = tasks.filter((t) =>
     hasAll([t.title, t.notes, name(t.linkedPersonId), ...(t.steps ?? []).map((s) => s.text)].join('\n'), terms)
   )
@@ -82,8 +98,15 @@ export function searchAll({ tasks, commLog, people, procedures = [] }, query, li
     entries: entries.slice(0, limit),
     people: matchedPeople.slice(0, limit),
     lists: matchedLists.slice(0, limit),
+    tracked: matchedTracked.slice(0, limit),
     tasks: orderedTasks.slice(0, limit),
-    totals: { entries: entries.length, people: matchedPeople.length, lists: matchedLists.length, tasks: orderedTasks.length },
+    totals: {
+      entries: entries.length,
+      people: matchedPeople.length,
+      lists: matchedLists.length,
+      tracked: matchedTracked.length,
+      tasks: orderedTasks.length,
+    },
   }
 }
 

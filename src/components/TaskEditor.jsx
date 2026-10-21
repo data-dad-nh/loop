@@ -39,7 +39,7 @@ export default function TaskEditor({ task, onClose }) {
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <form className="sheet" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+      <form className="sheet" role="dialog" aria-modal="true" aria-label="Edit task" onClick={(e) => e.stopPropagation()} onSubmit={save}>
         <h2 className="sheet__title">Edit task</h2>
 
         <label className="field">

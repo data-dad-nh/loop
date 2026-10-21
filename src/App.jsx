@@ -3,6 +3,7 @@ import Nav from './components/Nav'
 import RightNow from './components/RightNow'
 import TaskList from './components/TaskList'
 import Lists from './components/Lists'
+import Track from './components/Track'
 import CommLog from './components/CommLog'
 import SearchOverlay from './components/SearchOverlay'
 import { useAppData } from './context/AppDataContext'
@@ -14,6 +15,7 @@ const SCREENS = {
   now: RightNow,
   tasks: TaskList,
   lists: Lists,
+  track: Track,
   log: CommLog,
 }
 
@@ -21,6 +23,7 @@ export default function App() {
   const [tab, setTab] = useState('now')
   const [searching, setSearching] = useState(false)
   const [openListId, setOpenListId] = useState(null)
+  const [openTrackerId, setOpenTrackerId] = useState(null)
   const { tasks } = useAppData()
   useTaskNudges(tasks)
   const badge = useAppBadge(tasks)
@@ -53,7 +56,7 @@ export default function App() {
         </div>
       )}
       <main className="app__main" inert={searching}>
-        <Screen openListId={openListId} onOpenList={setOpenListId} />
+        <Screen openListId={openListId} onOpenList={setOpenListId} openTrackerId={openTrackerId} onOpenTracker={setOpenTrackerId} />
       </main>
       <Nav active={tab} onChange={setTab} inert={searching} />
       {searching && (
@@ -62,6 +65,11 @@ export default function App() {
           onOpenList={(id) => {
             setOpenListId(id)
             setTab('lists')
+            setSearching(false)
+          }}
+          onOpenTracker={(id) => {
+            setOpenTrackerId(id)
+            setTab('track')
             setSearching(false)
           }}
         />
