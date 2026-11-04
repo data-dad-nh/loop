@@ -5,16 +5,18 @@ import CommEntryRow from './CommEntryRow'
 // Loading context back in is the point — tapping a name should feel like
 // "oh right, here's where we left off" rather than a fresh search.
 export default function PersonTimeline({ personId, onBack }) {
-  const { people, commLog, tasks, updatePerson } = useAppData()
+  const { people, commLog, tasks, updatePerson, removePerson } = useAppData()
   const [renaming, setRenaming] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
   const [renameError, setRenameError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const person = people.find((p) => p.id === personId)
   const entries = commLog
     .filter((e) => e.personId === personId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   const linkedTasks = tasks.filter((t) => t.linkedPersonId === personId && !t.completed)
+  const taskCount = tasks.filter((t) => t.linkedPersonId === personId).length
 
   if (!person) return null
 
@@ -37,6 +39,17 @@ export default function PersonTimeline({ personId, onBack }) {
     setRenaming(false)
   }
 
+  const entryLabel = (n) => `${n} log ${n === 1 ? 'entry' : 'entries'}`
+  const kept = [
+    ...(entries.length ? [entryLabel(entries.length)] : []),
+    ...(taskCount ? [`${taskCount} ${taskCount === 1 ? 'task' : 'tasks'}`] : []),
+  ]
+
+  function confirmDelete(deleteEntries) {
+    removePerson(person.id, { deleteEntries })
+    onBack()
+  }
+
   return (
     <div>
       <button className="btn btn--ghost" onClick={onBack}>← Back</button>
@@ -50,7 +63,28 @@ export default function PersonTimeline({ personId, onBack }) {
       ) : (
         <div className="person-timeline__head">
           <h2 className="person-timeline__name">{person.name}</h2>
-          <button className="btn btn--ghost" onClick={startRename}>Rename</button>
+          <div className="person-timeline__actions">
+            <button className="btn btn--ghost" onClick={startRename}>Rename</button>
+            <button className="btn btn--ghost person-timeline__delete" onClick={() => setConfirmingDelete(true)}>Delete</button>
+          </div>
+        </div>
+      )}
+
+      {confirmingDelete && (
+        <div className="delete-panel" role="group" aria-label={`Delete ${person.name}`}>
+          <p className="delete-panel__title">Delete {person.name}?</p>
+          <p className="delete-panel__text">
+            {kept.length ? `Their ${kept.join(' and ')} will stay, but won't be linked to anyone.` : 'Nothing is linked to them.'}
+          </p>
+          <div className="delete-panel__actions">
+            <button className="btn btn--warm" onClick={() => confirmDelete(false)}>Delete person</button>
+            {entries.length > 0 && (
+              <button className="btn btn--warm" onClick={() => confirmDelete(true)}>
+                Delete person and {entryLabel(entries.length)}
+              </button>
+            )}
+            <button className="btn btn--ghost" onClick={() => setConfirmingDelete(false)}>Cancel</button>
+          </div>
         </div>
       )}
       {renameError && <p className="capture__error">{renameError}</p>}

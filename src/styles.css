@@ -1140,3 +1140,35 @@ button, input, textarea, select {
   background: var(--bg);
   color: var(--ink);
 }
+
+/* ---------- deleting a person ---------- */
+.person-timeline__actions { display: flex; }
+
+.person-timeline__delete { color: var(--warm); }
+
+.delete-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 14px;
+  padding: 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: var(--radius);
+}
+
+.delete-panel__title { margin: 0; font-weight: 600; }
+.delete-panel__text { margin: 0; font-size: 0.9rem; color: var(--ink-soft); }
+
+.delete-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn--warm {
+  background: var(--surface);
+  border-color: var(--warm);
+  color: var(--warm);
+}

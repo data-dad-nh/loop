@@ -158,6 +158,18 @@ export function AppDataProvider({ children }) {
     })
   }
 
+  // Deleting a person never leaves entries or tasks pointing at someone who no
+  // longer exists. Their log entries are kept and unlinked, unless you choose
+  // to delete them too. Tasks are always kept and unlinked.
+  function removePerson(id, { deleteEntries = false } = {}) {
+    for (const entry of commLog.filter((e) => e.personId === id)) {
+      if (deleteEntries) commOps.remove(entry.id)
+      else commOps.update(entry.id, { personId: null })
+    }
+    for (const task of tasks.filter((t) => t.linkedPersonId === id)) taskOps.update(task.id, { linkedPersonId: null })
+    peopleOps.remove(id)
+  }
+
   const value = {
     tasks,
     completeTask,
@@ -173,7 +185,7 @@ export function AppDataProvider({ children }) {
     people,
     addPerson: peopleOps.add,
     updatePerson: peopleOps.update,
-    removePerson: peopleOps.remove,
+    removePerson,
     findOrCreatePerson,
 
     procedures,
