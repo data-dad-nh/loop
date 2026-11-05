@@ -5,12 +5,14 @@ import { describeRepeat } from '../utils/recurrence'
 import { groupTasks } from '../utils/taskGroups'
 import { useTimeRefresh } from '../hooks/useTimeRefresh'
 import TaskCapture from './TaskCapture'
+import CompletedTasks from './CompletedTasks'
 import DayTimeline from './DayTimeline'
 import TaskEditor from './TaskEditor'
 
 // The main view is this calendar week (Sunday to Saturday), plus anything
 // overdue. Tasks dated after this Saturday wait in "Later" and move into the
-// main view when their week starts, with nothing to do by hand.
+// main view when their week starts, with nothing to do by hand. "Done" lists
+// finished tasks so they can be put back or cleared out.
 export default function TaskList() {
   const { tasks, completeTask, removeTask, people } = useAppData()
   const [view, setView] = useState('week')
@@ -62,6 +64,9 @@ export default function TaskList() {
         <button className={`chip${view === 'later' ? ' chip--active' : ''}`} aria-pressed={view === 'later'} onClick={() => setView('later')}>
           {groups.laterCount > 0 ? `Later (${groups.laterCount})` : 'Later'}
         </button>
+        <button className={`chip${view === 'done' ? ' chip--active' : ''}`} aria-pressed={view === 'done'} onClick={() => setView('done')}>
+          Done
+        </button>
       </div>
 
       {view === 'week' && (
@@ -95,6 +100,8 @@ export default function TaskList() {
           )}
         </>
       )}
+
+      {view === 'done' && <CompletedTasks />}
 
       {editingTask && <TaskEditor task={editingTask} onClose={() => setEditingTask(null)} />}
     </div>
