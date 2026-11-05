@@ -3,7 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { firebaseEnabled } from '../firebase'
 import { mergeByUpdatedAt, subscribeCollection, upsertDoc } from '../firestoreSync'
 import { makeId } from '../utils/id'
-import { nextDueDate } from '../utils/recurrence'
+import { canRestore, nextDueDate, nextOccurrenceId } from '../utils/recurrence'
 
 const AppDataContext = createContext(null)
 
@@ -137,11 +137,8 @@ export function AppDataProvider({ children }) {
 
     const seriesId = task.seriesId ?? task.id
     const occurrence = (task.occurrence ?? 0) + 1
-    const nextId = `${seriesId}-${occurrence}`
-    if (taskOps.get(nextId)) return // another device already made it
-
-    taskOps.add({
-      id: nextId,
+    const nextId = nextOccurrenceId(task)
+    const fields = {
       title: task.title,
       notes: task.notes ?? '',
       dueAt: nextDueDate(task).toISOString(),
@@ -155,7 +152,27 @@ export function AppDataProvider({ children }) {
       repeat: task.repeat,
       seriesId,
       occurrence,
-    })
+    }
+    const existingNext = taskOps.get(nextId)
+    if (existingNext && !existingNext.deleted) return // another device already made it
+    // A removed marker with this id exists if the occurrence was put back and
+    // then finished again. Revive it rather than adding a second item with the
+    // same id.
+    if (existingNext) taskOps.update(nextId, { ...fields, deleted: false })
+    else taskOps.add({ id: nextId, ...fields })
+  }
+
+  // Undo finishing (or skipping) a task. For a repeating task, finishing it
+  // created the next occurrence; that one is removed so the series doesn't end
+  // up with two open copies. Refused if the next one has already been done.
+  function restoreTask(id) {
+    const task = taskOps.get(id)
+    if (!task || task.deleted || !task.completed) return
+    if (!canRestore(task, taskOps.get)) return
+    taskOps.update(id, { completed: false, completedAt: null, skipped: false })
+    if (!task.repeat) return
+    const next = taskOps.get(nextOccurrenceId(task))
+    if (next && !next.deleted && !next.completed) taskOps.remove(next.id)
   }
 
   // Deleting a person never leaves entries or tasks pointing at someone who no
@@ -173,6 +190,7 @@ export function AppDataProvider({ children }) {
   const value = {
     tasks,
     completeTask,
+    restoreTask,
     addTask: taskOps.add,
     updateTask: taskOps.update,
     removeTask: taskOps.remove,
