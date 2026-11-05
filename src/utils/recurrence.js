@@ -63,6 +63,21 @@ export function nextDueDate(task, now = new Date()) {
   return next
 }
 
+// Id of the occurrence that completing `task` creates (see completeTask).
+// It comes from the series and occurrence number, so two devices finishing
+// the same occurrence create the same item.
+export function nextOccurrenceId(task) {
+  return `${task.seriesId ?? task.id}-${(task.occurrence ?? 0) + 1}`
+}
+
+// A repeating task can be put back unless its next occurrence is already done.
+// `getTask` looks a task up by id.
+export function canRestore(task, getTask) {
+  if (!task.repeat) return true
+  const next = getTask(nextOccurrenceId(task))
+  return !(next && !next.deleted && next.completed)
+}
+
 // Normalize what the picker holds into what gets stored on the task.
 export function finalizeRepeat(repeat, dueDateStr) {
   if (!repeat) return null

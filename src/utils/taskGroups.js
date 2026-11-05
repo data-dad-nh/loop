@@ -76,3 +76,37 @@ export function groupTasks(tasks, now = new Date()) {
 
   return { overdue, days, noDate, later, laterCount: laterTasks.length }
 }
+
+// Finished (and skipped) tasks, newest first, grouped by the day they were
+// done. `limit` caps how many tasks are returned; `total` is the full count.
+export function groupCompleted(tasks, now = new Date(), limit = Infinity) {
+  const done = tasks
+    .filter((t) => t.completed)
+    .sort((a, b) => new Date(b.completedAt ?? 0) - new Date(a.completedAt ?? 0))
+  const today = dayStart(now)
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+
+  const groups = []
+  for (const t of done.slice(0, limit)) {
+    let key = 'earlier'
+    let label = 'Earlier'
+    if (t.completedAt) {
+      const d = dayStart(new Date(t.completedAt))
+      key = d.toDateString()
+      const year = d.getFullYear() === now.getFullYear() ? '' : ` ${d.getFullYear()}`
+      label =
+        d.getTime() === today.getTime()
+          ? 'Today'
+          : d.getTime() === yesterday.getTime()
+          ? 'Yesterday'
+          : `${WEEKDAYS[d.getDay()].slice(0, 3)}, ${MONTHS[d.getMonth()]} ${d.getDate()}${year}`
+    }
+    let group = groups.find((g) => g.key === key)
+    if (!group) {
+      group = { key, label, items: [] }
+      groups.push(group)
+    }
+    group.items.push(t)
+  }
+  return { groups, total: done.length }
+}
