@@ -417,13 +417,17 @@ button, input, textarea, select {
 
 .task-row__title { margin: 0 0 4px; }
 
+/* Wraps as whole items, so "Done 7:30 AM" never splits mid-label. */
 .task-row__meta {
   margin: 0;
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 2px 10px;
   font-size: 0.78rem;
   color: var(--ink-soft);
 }
+
+.task-row__meta > span { white-space: nowrap; }
 
 .task-row__delete {
   border: none;
