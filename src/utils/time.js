@@ -59,6 +59,20 @@ export function relativeFromNow(isoString) {
   return diffMin > 0 ? `in ${diffDay}d` : `${Math.abs(diffDay)}d ago`
 }
 
+// Recent times read best as "3h ago"; older ones need a real date, since
+// nobody can place "38d ago" on a calendar. Future times keep the relative form.
+export function relativeOrDate(isoString, { days = 7, now = new Date() } = {}) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  if (now.getTime() - d.getTime() < days * 86400000) return relativeFromNow(isoString)
+  const sameYear = d.getFullYear() === now.getFullYear()
+  return d.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}
+
 // Minutes elapsed in the day right now, and a 0-100% position, used by
 // the day timeline visual (see DayTimeline.jsx) to fight time blindness
 // by showing time as a physical strip rather than a number.
