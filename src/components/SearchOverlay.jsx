@@ -3,7 +3,7 @@ import { useAppData } from '../context/AppDataContext'
 import { fold, searchAll } from '../utils/search'
 import { describeEntry } from '../utils/trackers'
 import { makeId } from '../utils/id'
-import { formatDayLabel, relativeFromNow } from '../utils/time'
+import { formatDayLabel, relativeOrDate } from '../utils/time'
 import CommEntryRow from './CommEntryRow'
 import Highlight from './Highlight'
 import PersonTimeline from './PersonTimeline'
@@ -122,7 +122,7 @@ export default function SearchOverlay({ onClose, onOpenList, onOpenTracker }) {
                             {nameOf(entry.personId) && (
                               <span className="comm-row__person"><Highlight text={nameOf(entry.personId)} terms={terms} /></span>
                             )}
-                            <span className="comm-row__time">{relativeFromNow(entry.createdAt)}</span>
+                            <span className="comm-row__time">{relativeOrDate(entry.createdAt)}</span>
                           </span>
                           <span className="comm-row__summary search__snippet">
                             <Highlight text={entry.summary} terms={terms} maxLen={220} />
@@ -222,7 +222,7 @@ export default function SearchOverlay({ onClose, onOpenList, onOpenTracker }) {
                           <div className="task-row__body">
                             <span className="task-row__title search__done"><Highlight text={t.title} terms={terms} /></span>
                             <span className="task-row__meta">
-                              <span>{t.skipped ? 'Skipped' : 'Done'} {relativeFromNow(t.completedAt)}</span>
+                              <span>{t.skipped ? 'Skipped' : 'Done'} {relativeOrDate(t.completedAt)}</span>
                               {nameOf(t.linkedPersonId) && <span>{nameOf(t.linkedPersonId)}</span>}
                             </span>
                           </div>

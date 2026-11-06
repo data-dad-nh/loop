@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
-import { relativeFromNow } from '../utils/time'
+import { relativeOrDate } from '../utils/time'
 import TrackerDetail from './TrackerDetail'
 import TrackerEditor from './TrackerEditor'
 
@@ -45,7 +45,7 @@ export default function Track({ openTrackerId, onOpenTracker }) {
           <span className="list-card__main">
             <span className="people-row__name">{t.name}</span>
             <span className="list-card__sub">
-              {mine.length === 0 ? 'Nothing logged yet' : `${lastWeek} in the last 7 days · last ${relativeFromNow(last.toISOString())}`}
+              {mine.length === 0 ? 'Nothing logged yet' : `${lastWeek} in the last 7 days · last ${relativeOrDate(last.toISOString())}`}
             </span>
           </span>
         </button>

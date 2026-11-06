@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
 import { makeId } from '../utils/id'
-import { relativeFromNow } from '../utils/time'
+import { relativeOrDate } from '../utils/time'
 import NoteAssist from './NoteAssist'
 
 export const TYPES = [
@@ -137,7 +137,7 @@ export default function CommEntryRow({ entry, personName }) {
       <div className="comm-row__head">
         <span className="comm-row__type">{entry.type}</span>
         {personName && <span className="comm-row__person">{personName}</span>}
-        <span className="comm-row__time">{relativeFromNow(entry.createdAt)}</span>
+        <span className="comm-row__time">{relativeOrDate(entry.createdAt)}</span>
         <button className="comm-row__edit" onClick={startEdit}>Edit</button>
         <button className="task-row__delete" onClick={() => removeCommEntry(entry.id)} aria-label="Delete entry">×</button>
       </div>
